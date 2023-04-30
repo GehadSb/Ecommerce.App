@@ -7,7 +7,6 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Security.Claims;
-using System.Text.Json;
 
 namespace Ecommerce.UI.Controllers
 {
@@ -74,8 +73,8 @@ namespace Ecommerce.UI.Controllers
             var result = await _mediator.Send(new SaveOrderCommand() { ShoppingCartItems = items, UserId = userId });
 
             await _shoppingCart.ClearShoppingCartAsync();
-            string message = JsonSerializer.Serialize(result.Id);
-            await SendOrderRequest(topic, message);
+            // string message = JsonSerializer.Serialize(result.Id);
+            //  await SendOrderRequest(topic, message);
 
             return View("OrderCompleted");
         }

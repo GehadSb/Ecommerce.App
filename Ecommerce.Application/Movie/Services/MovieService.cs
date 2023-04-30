@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using Ecommerce.Application.Common.Exceptions;
+using Ecommerce.Application.Exceptions;
 using Ecommerce.Application.Movie.Services.VM;
 using Ecommerce.Domain.Common;
 using Ecommerce.Domain.MovieAggregate.Enums;
@@ -28,6 +30,10 @@ namespace Ecommerce.Application.Movie.Services
         }
         public async Task<Ecommerce.Domain.MovieAggregate.Movie> GetMovieByIdAsync(long id)
         {
+            if (id == 0)
+            {
+                throw new BadRequestException("Invalid id");
+            }
             var includes = new Expression<Func<Ecommerce.Domain.MovieAggregate.Movie, object>>[]
            {
                  c => c.Cinema,
@@ -36,8 +42,7 @@ namespace Ecommerce.Application.Movie.Services
             var movie = await _movieRepository.FindAsync(id, includes);
             if (movie is null)
             {
-                return null;
-
+                throw new NotFoundException("Movie");
             }
             return movie;
         }
