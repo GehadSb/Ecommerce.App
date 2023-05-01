@@ -4,10 +4,12 @@ using Ecommerce.Application.Movie.Queries.GetById;
 using Ecommerce.Application.Movie.Services;
 using FluentValidation;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Ecommerce.API.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class MovieController : ControllerBase

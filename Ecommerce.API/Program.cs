@@ -1,3 +1,4 @@
+using Ecommerce.API;
 using Ecommerce.API.Helper.Cart;
 using Ecommerce.API.Middleware;
 using Ecommerce.Application.Common.Exceptions;
@@ -7,6 +8,8 @@ using Ecommerce.Domain.Common;
 using Ecommerce.Infrastructure.DependencyInjection;
 using Ecommerce.Infrastructure.Persistence.Repositories;
 using FluentValidation.AspNetCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -52,7 +55,10 @@ builder.Services.AddTransient<ExceptionHandlerMiddleware>();
 ///
 
 //keycloak
-//IdentityModelEventSource.ShowPII = true;
+//rgister auth
+builder.Services.RegisterSwaggerAuthentication();
+
+IdentityModelEventSource.ShowPII = true;
 //var authenticationOptions = new KeycloakAuthenticationOptions
 //{
 //    AuthServerUrl = "http://localhost:8088/",
@@ -64,14 +70,14 @@ builder.Services.AddTransient<ExceptionHandlerMiddleware>();
 //    .GetSection(KeycloakAuthenticationOptions.Section)
 //    .Get<KeycloakAuthenticationOptions>();
 //builder.Services.AddKeycloakAuthentication(authenticationOptions);
-///var host = builder.Host;
+//var host = builder.Host;
 //builder.Services.AddAuthentication(options =>
 //{
 //    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
 //    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 //}).AddJwtBearer(o =>
 //{
-//    o.Authority = configuration["Jwt:https://localhost:8080/auth/realms/TESTEco"];//https://localhost:8080/auth/realms/TESTEco
+//    o.Authority = configuration["Jwt:httpx``s://localhost:8080/auth/realms/TESTEco"];//https://localhost:8080/auth/realms/TESTEco
 //    o.Audience = configuration["Jwt:demo-app"];//demo-app
 //    o.Events = new JwtBearerEvents()
 //    {
@@ -90,6 +96,36 @@ builder.Services.AddTransient<ExceptionHandlerMiddleware>();
 //    };
 //});
 
+
+
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(o =>
+{
+    o.Authority = "http://localhost:8080/auth/realms/Ecommerce/";
+    o.Audience = "TEST";
+    o.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+    {
+        ValidAudiences = new string[] { "Ecommerce", "account", "TEST" }
+    };
+    o.Events = new JwtBearerEvents()
+    {
+        OnAuthenticationFailed = c =>
+        {
+            c.NoResult();
+            c.Response.StatusCode = 500;
+            c.Response.ContentType = "application/json";
+            return c.Response.WriteAsync(c.Exception.ToString());
+        }
+    };
+    o.RequireHttpsMetadata = false;
+    o.Validate();
+    o.SaveToken = true;
+});
+
 //
 
 
@@ -102,7 +138,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+////app.UseHttpsRedirection();
 app.UseSession();
 
 // app.UseAuthorization();
