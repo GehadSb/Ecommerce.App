@@ -1,5 +1,4 @@
 using Ecommerce.API.Helper.Cart;
-using Ecommerce.API.Helper.Kafka;
 using Ecommerce.API.Middleware;
 using Ecommerce.Application.Common.Exceptions;
 using Ecommerce.Application.DependencyInjection;
@@ -48,7 +47,7 @@ builder.Services.AddScoped(sc => ShoppingCart.GetShoppingCart(sc));
 builder.Services.AddMvc().AddSessionStateTempDataProvider();
 builder.Services.AddSession();
 builder.Services.AddTransient<IMovieService, MovieService>();
-builder.Services.AddScoped<IProduceMessage, ProduceMessage>();
+builder.Services.AddScoped<Ecommerce.Application.Common.Helper.Kafka.IProduceMessage, Ecommerce.Application.Common.Helper.Kafka.ProduceMessage>();
 builder.Services.AddTransient<ExceptionHandlerMiddleware>();
 ///
 

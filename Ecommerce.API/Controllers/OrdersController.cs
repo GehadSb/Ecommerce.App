@@ -1,8 +1,11 @@
-﻿using Ecommerce.API.Helper.Cart;
+﻿using AutoMapper;
+using Ecommerce.API.Helper.Cart;
 using Ecommerce.API.ViewModels;
 using Ecommerce.Application.Movie.Services;
+using Ecommerce.Application.Order.Commands.Save;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Ecommerce.API.Controllers
 {
@@ -14,15 +17,18 @@ namespace Ecommerce.API.Controllers
         private readonly ILogger<MovieController> _logger;
         private readonly IMediator _mediator;
         private readonly IMovieService _moviesService;
-        public OrdersController(ShoppingCart shoppingCart, ILogger<MovieController> logger, IMediator mediator, IMovieService movieService)
+        private readonly IMapper _mapper;
+
+        public OrdersController(ShoppingCart shoppingCart, ILogger<MovieController> logger, IMediator mediator, IMovieService movieService, IMapper mapper)
         {
             _shoppingCart = shoppingCart;
             _logger = logger;
             _mediator = mediator;
             _moviesService = movieService;
+            _mapper = mapper;
         }
         [HttpGet("list-shopping-cart")]
-        public async Task<IActionResult> ShoppingCart()
+        public async Task<IActionResult> Get()
         {
             var items = _shoppingCart.GetShoppingCartItems();
             _shoppingCart.ShoppingCartItems = items;
@@ -41,7 +47,7 @@ namespace Ecommerce.API.Controllers
             return Ok(shopCartOutPut);
         }
         [HttpPost("add-to-cart")]
-        public async Task<IActionResult> AddItemToShoppingCart([FromQuery] int id)
+        public async Task<IActionResult> Add([FromQuery] int id)
         {
             var item = await _moviesService.GetMovieByIdAsync(id);
 
@@ -52,7 +58,7 @@ namespace Ecommerce.API.Controllers
             return Ok("Added to cart sucessfully");
         }
         [HttpPost("remove-from-cart")]
-        public async Task<IActionResult> RemoveItemFromShoppingCart(int id)
+        public async Task<IActionResult> Remove(int id)
         {
             var item = await _moviesService.GetMovieByIdAsync(id);
 
@@ -61,6 +67,22 @@ namespace Ecommerce.API.Controllers
                 _shoppingCart.RemoveItemFromCart(item);
             }
             return Ok("Removed from Cart sucessfully");
+        }
+        [HttpPost("complete-order-cart")]
+        public async Task<IActionResult> CompleteOrder()
+        {
+            var items = _shoppingCart.GetShoppingCartItems();
+            List<ShoppingCartItemInput> shoppingCartItems = new List<ShoppingCartItemInput>();
+            if (items.Count > 0 && items != null)
+            {
+                shoppingCartItems = new(_mapper.Map<List<ShoppingCartItemInput>>(items));
+            }
+            string userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            userId = "geeeggg";
+            var result = await _mediator.Send(new SaveOrderCommand() { ShoppingCartItems = shoppingCartItems, UserId = userId });
+
+            await _shoppingCart.ClearShoppingCartAsync();
+            return Ok("OrderCompleted");
         }
     }
 }
